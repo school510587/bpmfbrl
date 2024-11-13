@@ -1,0 +1,37 @@
+# 台灣注音點字開發與測試
+# Copyright (C) 2024 NVDA-Taiwan Volunteers Team
+# This file is distributed under the same license as the bpmfbrl package.
+# Sponge Jhan <school510587@yahoo.com.tw>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bpmfbrl 23.02\n"
+"Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
+"POT-Creation-Date: 2024-11-13 04:18+0800\n"
+"PO-Revision-Date: 2024-11-13 16:34+0800\n"
+"Language-Team: NVDA-Taiwan Volunteers Team\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.3\n"
+"Last-Translator: Sponge Jhan <school510587@yahoo.com.tw>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_TW\n"
+
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+#: buildVars.py:23
+msgid "Taiwanese bopomofo braille test"
+msgstr "台灣注音點字測試"
+
+#. Add-on description
+#. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
+#: buildVars.py:26
+msgid "The development version of Taiwanese bopomofo braille."
+msgstr "台灣注音點字的開發中版本。"
+
+#. Translators: Name of the braille translation table provided by the add-on
+#: buildVars.py:91
+msgid "Taiwanese Bopomofo Braille Development Version"
+msgstr "台灣注音點字開發版"
