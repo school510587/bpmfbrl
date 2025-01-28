@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 
 try: reduce
 except: from functools import reduce
@@ -19,11 +20,30 @@ except: from functools import reduce
 try: unichr
 except: unichr = chr
 
+def add_missing_variants(data_variants):
+    for c in map(unichr, range(0xF900, 0xFB00)):
+        x = unicodedata.normalize("NFKD", c)
+        if ord(x) < 0x10000 and x != c and c not in data_variants:
+            data_variants[c] = data_variants.get(x, x)
+
+def fix_indirect_variants(data_variants):
+    for word in data_variants: # Warning when (k, l) and (l, m) coexists.
+        path = [word] # To explore a path beginning from the word.
+        while data_variants[word] not in path:
+            path.append(data_variants[word])
+            if data_variants[word] not in data_variants: # The path ends.
+                break
+            data_variants[word] = data_variants[data_variants[word]] # The next node on the path.
+        else: # A cycle (loop) is detected.
+            raise SyntaxError(" -> ".join(path[path.find(data_variants[word]):] + [data_variants[word]]))
+        if len(path) > 2: # A long path is detected.
+            print("Warning:", " -> ".join(path), file=sys.stderr)
+
 def load(json_path):
-    with codecs.open(json_path, encoding="UTF-8") as json_file:
+    with codecs.open(json_path, encoding="UTF-8-SIG") as json_file:
         json_content = json_file.read()
         data = json.JSONDecoder(object_pairs_hook=OrderedDict).decode(json_content)
-        for phrase, dot_pattern in data.items():
+        for phrase, dot_pattern in data["phrases"].items():
             if len(phrase) != len(dot_pattern):
                 raise ValueError("Inconsistent {0} => {1}".format(phrase, dot_pattern))
             for i, cells in enumerate(dot_pattern):
@@ -32,6 +52,9 @@ def load(json_path):
                         raise ValueError("Empty cell in character {0} cell {1} of phrase {2}".format(i, j, phrase))
                     if not re.match("^0|1?2?3?4?5?6?7?8?$", cell):
                         raise ValueError("Format error in character {0} cell {1} of phrase {2}".format(i, j, phrase))
+        for k, v in data["variants"].items():
+            if len(k) != len(v):
+                raise ValueError("Different length: {0} {1}".format(k, v))
         return data
 
 brl = lambda p: "".join(unichr(0x2800 | (0 if x == '0' else reduce(ior, (1 << (ord(d) - ord('1')) for d in x)))) for x in "-".join(p).split("-"))
