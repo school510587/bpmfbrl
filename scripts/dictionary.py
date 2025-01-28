@@ -39,7 +39,7 @@ def fix_indirect_variants(data_variants):
         if len(path) > 2: # A long path is detected.
             print("Warning:", " -> ".join(path), file=sys.stderr)
 
-def load(json_path):
+def load_dictionary(json_path):
     with codecs.open(json_path, encoding="UTF-8-SIG") as json_file:
         json_content = json_file.read()
         data = json.JSONDecoder(object_pairs_hook=OrderedDict).decode(json_content)
@@ -70,5 +70,5 @@ if __name__ == "__main__":
         print("Usage:", sys.argv[0], "<path/to/zh-tw-dictionary.json>", file=sys.stderr)
         print("Without format error, the stdout is the dictionary with sorted phrases.", file=sys.stderr)
         exit()
-    data = load(sys.argv[1])
+    data = load_dictionary(sys.argv[1])
     print(json.dumps(data, ensure_ascii=False, indent=4, sort_keys=True))
