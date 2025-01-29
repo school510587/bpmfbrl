@@ -20,6 +20,9 @@ except: from functools import reduce
 try: unichr
 except: unichr = chr
 
+h2s = lambda x: re.sub(r"(?i)\\([ux][0-9A-Z]{4}|y[0-9A-Z]{5}|z[0-9A-Z]{8})", lambda m: unichr(int(m.group(1)[1:], 16)), x)
+s2h = lambda x: "".join(c if ord(c) < 128 else (("\\x%04X" if ord(c) < 0x10000 else "\\y%05X" if ord(c) < 0x100000 else "\\z08X") % (ord(c),)) for c in x)
+
 def add_missing_variants(data_variants):
     for c in map(unichr, range(0xF900, 0xFB00)):
         x = unicodedata.normalize("NFKD", c)
