@@ -9,6 +9,7 @@ from operator import iadd
 import codecs
 import os
 import re
+import sys
 
 from dictionary import *
 
@@ -17,6 +18,9 @@ except: from functools import reduce
 
 try: unichr
 except: unichr = chr
+
+DEFAULT_ZH_TW_TABLE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "addon", "brailleTables", "zh-tw.ctb"))
+DEFAULT_YAML_TEST_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "zh-tw-dictionary.yaml"))
 
 h2s = lambda x: re.sub(r"(?i)\\([ux][0-9A-Z]{4}|y[0-9A-Z]{5}|z[0-9A-Z]{8})", lambda m: unichr(int(m.group(1)[1:], 16)), x)
 s2h = lambda x: "".join(c if ord(c) < 128 else (("\\x%04X" if ord(c) < 0x10000 else "\\y%05X" if ord(c) < 0x100000 else "\\z08X") % (ord(c),)) for c in x)
@@ -126,8 +130,8 @@ class LouisBRLTBL:
             for p in sorted(self.p2b.keys()):
                 print_test(p, self.p2b[p][0], ymlf)
 
-data = load_dictionary(r"data\zh-tw-dictionary.json")
+data = load_dictionary(DEFAULT_JSON_PATH)
 add_missing_variants(data["variants"])
-brltbl = LouisBRLTBL(r"D:\liblouis\tables\zh-tw.ctb")
+brltbl = LouisBRLTBL(DEFAULT_ZH_TW_TABLE_PATH)
 brltbl.make_rules(data)
-brltbl.make_tests(data, "zh-tw-dictionary.yaml")
+brltbl.make_tests(data, os.path.join(DEFAULT_YAML_TEST_PATH))
