@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from operator import concat, countOf, ior
 import codecs
+import io
 import json
 import os
 import re
@@ -19,6 +20,8 @@ except: from functools import reduce
 
 try: unichr
 except: unichr = chr
+
+DEFAULT_JSON_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "zh-tw-dictionary.json"))
 
 h2s = lambda x: re.sub(r"(?i)\\([ux][0-9A-Z]{4}|y[0-9A-Z]{5}|z[0-9A-Z]{8})", lambda m: unichr(int(m.group(1)[1:], 16)), x)
 s2h = lambda x: "".join(c if ord(c) < 128 else (("\\x%04X" if ord(c) < 0x10000 else "\\y%05X" if ord(c) < 0x100000 else "\\z08X") % (ord(c),)) for c in x)
@@ -71,9 +74,15 @@ def print_test(case, answer, ymlf):
         print("      inputPos:", reduce(concat, ([i] * (countOf(answer[i], "-") + 1) for i in range(len(case)))), end=os.linesep, file=ymlf)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage:", sys.argv[0], "<path/to/zh-tw-dictionary.json>", file=sys.stderr)
-        print("Without format error, the stdout is the dictionary with sorted phrases.", file=sys.stderr)
-        exit()
-    data = load_dictionary(sys.argv[1])
-    print(json.dumps(data, ensure_ascii=False, indent=4, sort_keys=True))
+    print("Usage:", sys.argv[0], "[<path/to/zh-tw-dictionary.json>]", file=sys.stderr)
+    print("The destination with sorted keys:", DEFAULT_JSON_PATH, file=sys.stderr)
+    print("If the argument is not specified, in-place modification will occur in the default JSON dictionary.", file=sys.stderr)
+    try:
+        source_json_path = sys.argv[1]
+        if len(sys.argv) > 2:
+            exit(1)
+    except IndexError:
+        source_json_path = DEFAULT_JSON_PATH
+    data = load_dictionary(source_json_path)
+    with io.open(DEFAULT_JSON_PATH, "w", encoding="UTF-8", newline=os.linesep) as json_file:
+        print(json.dumps(data, ensure_ascii=False, indent=4, sort_keys=True), file=json_file)
