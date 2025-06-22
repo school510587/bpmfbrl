@@ -61,12 +61,14 @@ def load_dictionary(json_path):
         return data
 
 brl = lambda p: "".join(unichr(0x2800 | (0 if x == '0' else reduce(ior, (1 << (ord(d) - ord('1')) for d in x)))) for x in "-".join(p).split("-"))
-def print_yaml(data, testcase):
-    for p in sorted(data.keys()):
-        print('  - - "{0}"'.format(p), file=testcase)
-        print('    - "{0}"'.format(brl(data[p])), file=testcase)
-        print("    - outputPos:", "[0" + (", %d" * (len(p) - 1)) % tuple((countOf("-".join(data[p][:i]), "-") + 1 ) for i in range(1, len(p))) + "]", file=testcase)
-        print("      inputPos:", reduce(concat, ([i] * (countOf(data[p][i], "-") + 1) for i in range(len(p)))), file=testcase)
+def print_test(case, answer, ymlf):
+    if len(case) < 2: # Single-letter case.
+        print('  - ["%s", "%s"]'%(case, brl((answer,))), end=os.linesep, file=ymlf)
+    else: # Multiple-letter case.
+        print('  - - "{0}"'.format(case), end=os.linesep, file=ymlf)
+        print('    - "{0}"'.format(brl(answer)), end=os.linesep, file=ymlf)
+        print("    - outputPos:", "[0" + (", %d" * (len(case) - 1)) % tuple((countOf("-".join(answer[:i]), "-") + 1) for i in range(1, len(case))) + "]", end=os.linesep, file=ymlf)
+        print("      inputPos:", reduce(concat, ([i] * (countOf(answer[i], "-") + 1) for i in range(len(case)))), end=os.linesep, file=ymlf)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
