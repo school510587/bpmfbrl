@@ -1,0 +1,92 @@
+# -*- coding: UTF-8 -*-
+# Copyright (C) 2025 Bo-Cheng Jhan <school510587@yahoo.com.tw>
+# This file is covered by the GNU General Public License.
+# See the file LICENSE for more details.
+
+from operator import iadd
+import codecs
+import re
+
+from dictionary import *
+
+try: reduce
+except: from functools import reduce
+
+try: unichr
+except: unichr = chr
+
+h2s = lambda x: re.sub(r"(?i)\\([ux][0-9A-Z]{4}|y[0-9A-Z]{5}|z[0-9A-Z]{8})", lambda m: unichr(int(m.group(1)[1:], 16)), x)
+s2h = lambda x: "".join(c if ord(c) < 128 else (("\\x%04X" if ord(c) < 0x10000 else "\\y%05X" if ord(c) < 0x100000 else "\\z08X") % (ord(c),)) for c in x)
+p2h = lambda x, i=0: ("_%d"%(i%len(x),) if i != 0 else "") + ('"%s"'%(s2h(x[:i]),) if x[:i] else "") + ('["%s"]' if len(x) > 1 else '"%s"')%(s2h(x[i]),) + ('"%s"'%(s2h(x[i+1:]),) if x[i+1:] else "")
+
+CHI = reduce(iadd, (list(range(*t)) for t in [
+    (0x2E80, 0x2FE0), # CJK Radicals Supplement
+    (0x3007, 0x3008), # CJK Symbols and Punctuation
+    (0x3400, 0xA000), # CJK Unified Ideographs Extension A, CJK Unified Ideographs
+    (0xF900, 0xFB00), # CJK Compatibility Ideographs
+]))
+
+class LouisBRLTBL:
+    def __init__(self, table_path):
+        self.tbl, self.word = {}, {}
+        with codecs.open(table_path, encoding="UTF-8-SIG") as tblf:
+            for l in tblf:
+                l = l.strip()
+                if not l or l[0] == '#': continue
+                l = re.split("\\s+", l, re.U)
+                if l[0] in ("attribute", "begword", "include", "noback"): continue
+                if l[0] == "word": # The word command.
+                    self.word[h2s(l[1])] = l[2]
+                else: # The ordinary character definition.
+                    self.tbl[h2s(l[1])] = l[2]
+        self.p2b, self.w2p = {}, {}
+    def make_rules(self, data):
+        for phrase in data["phrases"]: # Construct p2b and w2p.
+            for t in phrase:
+                try: # Collect phrases containing character t.
+                    self.w2p[t][0].add(phrase)
+                except KeyError: # The initial element of a self.w2p entry.
+                    self.w2p[t] = [{phrase}, False]
+            self.p2b[phrase] = [[], []]
+            self.p2b[phrase][0] = data["phrases"][phrase]
+            self.p2b[phrase][1] = list((b != a) for b, a in zip(data["phrases"][phrase], (self.tbl[t] for t in phrase)))
+        for p in self.p2b:
+            for w in (t[0] for t in zip(p, self.p2b[p][1]) if t[1]):
+                self.w2p[w][1] = True # Occurrence of heteronym with a different pronunciation.
+        for p in sorted(self.p2b.keys(), key=len):
+            if len(p) > 2: # A long phrase p.
+                # Some heteronyms have different pronunciations in a long phrase p and a short phrase q, where q is a
+                # substring of p. The heteronym p[i] must be marked even if its pronunciation is the same as the default.
+                for i in filter(lambda i: not self.p2b[p][1][i], range(len(p))): # p[i]: A word not marked as heteronym.
+                    for q in sorted(self.w2p[p[i]][0] - {p}): # q: A phrase, but p, containing p[i].
+                        for j in (m.start() for m in re.finditer(q, p) if i in range(m.start(), m.end())):
+                            self.p2b[p][1][i] = self.p2b[p][1][i] or self.p2b[q][1][i - j]
+            if not sum(self.p2b[p][1]) and not any(t in data["variants"] for t in p): raise ValueError("No heteronym: {0}".format(p))
+            if len(p) <= 2: continue
+            # Place heteronym marks at the beginning and the end of a long phase according to self.w2p.
+            for i in (0, -1): # The head and the tail.
+                self.p2b[p][1][i] = self.p2b[p][1][i] or self.w2p[p[i]][1]
+        for w in sorted(data["variants"].keys(), key=lambda x: (-len(x), x)):
+            if len(w) > 1: # Conditional replacement (usually for simplified words).
+                # The "noback correct" rule for w[i] is additional and necessary.
+                for i in (j for j in range(len(w)) if data["variants"][w][j] not in (w[j], data["variants"].get(w[j], w[j]))):
+                    print("noback correct", p2h(w, i), p2h(data["variants"][w][i]))
+                continue
+            if w in self.w2p: # Invariant cases for "noback correct".
+                # By default, each occurrence of variants should be replaced with their corresponding canonical
+                # words. However, phrases in data["phrases"] must remain unchanged for correct application of
+                # "noback context" rules.
+                for x in sorted(self.w2p[w][0]): # For each phrase x containing w.
+                    for y in re.finditer(w, x):
+                        print("noback correct", p2h(x, y.start()), p2h(w))
+            print("noback correct", p2h(w), p2h(data["variants"][w])) # The default replacement rule.
+        for p in sorted(self.p2b.keys(), key=lambda x: (-len(x), x)):
+            if sum(self.p2b[p][1]): print("\n#", s2h(p), "-".join(self.p2b[p][0]))
+            for i in range(len(p)):
+                if self.p2b[p][1][i]: # The occurrence of heteronym.
+                    print("noback context", p2h(p, i), "@" + self.p2b[p][0][i])
+
+data = load_dictionary(r"data\zh-tw-dictionary.json")
+add_missing_variants(data["variants"])
+brltbl = LouisBRLTBL(r"D:\liblouis\tables\zh-tw.ctb")
+brltbl.make_rules(data)
