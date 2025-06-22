@@ -66,12 +66,12 @@ def load_dictionary(json_path):
 brl = lambda p: "".join(unichr(0x2800 | (0 if x == '0' else reduce(ior, (1 << (ord(d) - ord('1')) for d in x)))) for x in "-".join(p).split("-"))
 def print_test(case, answer, ymlf):
     if len(case) < 2: # Single-letter case.
-        print('  - ["%s", "%s"]'%(case, brl((answer,))), end=os.linesep, file=ymlf)
+        print('  - ["%s", "%s"]'%(case, brl((answer,))), file=ymlf)
     else: # Multiple-letter case.
-        print('  - - "{0}"'.format(case), end=os.linesep, file=ymlf)
-        print('    - "{0}"'.format(brl(answer)), end=os.linesep, file=ymlf)
-        print("    - outputPos:", "[0" + (", %d" * (len(case) - 1)) % tuple((countOf("-".join(answer[:i]), "-") + 1) for i in range(1, len(case))) + "]", end=os.linesep, file=ymlf)
-        print("      inputPos:", reduce(concat, ([i] * (countOf(answer[i], "-") + 1) for i in range(len(case)))), end=os.linesep, file=ymlf)
+        print('  - - "{0}"'.format(case), file=ymlf)
+        print('    - "{0}"'.format(brl(answer)), file=ymlf)
+        print("    - outputPos:", "[0" + (", %d" * (len(case) - 1)) % tuple((countOf("-".join(answer[:i]), "-") + 1) for i in range(1, len(case))) + "]", file=ymlf)
+        print("      inputPos:", reduce(concat, ([i] * (countOf(answer[i], "-") + 1) for i in range(len(case)))), file=ymlf)
 
 if __name__ == "__main__":
     print("Usage:", sys.argv[0], "[<path/to/zh-tw-dictionary.json>]", file=sys.stderr)

@@ -7,6 +7,7 @@ from __future__ import print_function
 from datetime import datetime
 from operator import iadd
 import codecs
+import io
 import os
 import re
 import sys
@@ -91,33 +92,33 @@ class LouisBRLTBL:
                 if self.p2b[p][1][i]: # The occurrence of heteronym.
                     print("noback context", p2h(p, i), "@" + self.p2b[p][0][i])
     def make_tests(self, data, yaml_path):
-        with codecs.open(yaml_path, "w", encoding="UTF-8") as ymlf:
-            print(u"# Copyright \u00A9 2022 Bo-Cheng Jhan <school510587@yahoo.com.tw>", end=os.linesep, file=ymlf)
-            print(u"# Copyright \u00A9 2022-{0} nvda-tw <https://groups.io/g/nvda-tw>".format(datetime.today().year), end=os.linesep, file=ymlf)
-            print("#", end=os.linesep, file=ymlf)
-            print("# This file is part of liblouis.", end=os.linesep, file=ymlf)
-            print("#", end=os.linesep, file=ymlf)
-            print("# Copying and distribution of this file, with or without modification,", end=os.linesep, file=ymlf)
-            print("# are permitted in any medium without royalty provided the copyright", end=os.linesep, file=ymlf)
-            print("# notice and this notice are preserved.  This file is offered as-is,", end=os.linesep, file=ymlf)
-            print("# without any warranty.", end=os.linesep, file=ymlf)
-            print("#", end=os.linesep, file=ymlf)
-            print("# Currently maintained by Sponge Jhan <school510587@yahoo.com.tw>", end=os.linesep, file=ymlf)
-            print("# Version:", datetime.today().strftime("%Y-%m"), end=os.linesep, file=ymlf)
-            print("", end=os.linesep, file=ymlf)
-            print("# This file is dedicated for Han character test cases. The following tests", end=os.linesep, file=ymlf)
-            print("# are generated from some dictionary file(s) automatically.", end=os.linesep, file=ymlf)
-            print("", end=os.linesep, file=ymlf)
-            print("# The display tables have been separated from the translation tables. But in", end=os.linesep, file=ymlf)
-            print("# the case of this test some display relevant stuff is still defined in the", end=os.linesep, file=ymlf)
-            print("# translation table. That is why we have to include it here.", end=os.linesep, file=ymlf)
-            print("display: unicode.dis", end=os.linesep, file=ymlf)
-            print("table:", end=os.linesep, file=ymlf)
-            print("  language: cmn", end=os.linesep, file=ymlf)
-            print("  region: cmn-TW", end=os.linesep, file=ymlf)
-            print("  __assert-match: zh-tw.ctb", end=os.linesep, file=ymlf)
-            print("flags: {testmode: forward}", end=os.linesep, file=ymlf)
-            print("tests:", end=os.linesep, file=ymlf)
+        with io.open(yaml_path, "w", encoding="UTF-8", newline=os.linesep) as ymlf:
+            print(u"# Copyright \u00A9 2022 Bo-Cheng Jhan <school510587@yahoo.com.tw>", file=ymlf)
+            print(u"# Copyright \u00A9 2022-{0} nvda-tw <https://groups.io/g/nvda-tw>".format(datetime.today().year), file=ymlf)
+            print("#", file=ymlf)
+            print("# This file is part of liblouis.", file=ymlf)
+            print("#", file=ymlf)
+            print("# Copying and distribution of this file, with or without modification,", file=ymlf)
+            print("# are permitted in any medium without royalty provided the copyright", file=ymlf)
+            print("# notice and this notice are preserved.  This file is offered as-is,", file=ymlf)
+            print("# without any warranty.", file=ymlf)
+            print("#", file=ymlf)
+            print("# Currently maintained by Sponge Jhan <school510587@yahoo.com.tw>", file=ymlf)
+            print("# Version:", datetime.today().strftime("%Y-%m"), file=ymlf)
+            print("", file=ymlf)
+            print("# This file is dedicated for Han character test cases. The following tests", file=ymlf)
+            print("# are generated from some dictionary file(s) automatically.", file=ymlf)
+            print("", file=ymlf)
+            print("# The display tables have been separated from the translation tables. But in", file=ymlf)
+            print("# the case of this test some display relevant stuff is still defined in the", file=ymlf)
+            print("# translation table. That is why we have to include it here.", file=ymlf)
+            print("display: unicode.dis", file=ymlf)
+            print("table:", file=ymlf)
+            print("  language: cmn", file=ymlf)
+            print("  region: cmn-TW", file=ymlf)
+            print("  __assert-match: zh-tw.ctb", file=ymlf)
+            print("flags: {testmode: forward}", file=ymlf)
+            print("tests:", file=ymlf)
             for c in sorted(set(data["variants"].keys()) | set(self.word.keys())):
                 try:
                     if len(c) == 1:
