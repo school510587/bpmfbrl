@@ -22,8 +22,6 @@ except: unichr = chr
 DEFAULT_ZH_TW_TABLE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "addon", "brailleTables", "zh-tw.ctb"))
 DEFAULT_YAML_TEST_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "zh-tw-dictionary.yaml"))
 
-h2s = lambda x: re.sub(r"(?i)\\([ux][0-9A-Z]{4}|y[0-9A-Z]{5}|z[0-9A-Z]{8})", lambda m: unichr(int(m.group(1)[1:], 16)), x)
-s2h = lambda x: "".join(c if ord(c) < 128 else (("\\x%04X" if ord(c) < 0x10000 else "\\y%05X" if ord(c) < 0x100000 else "\\z08X") % (ord(c),)) for c in x)
 p2h = lambda x, i=0: ("_%d"%(i%len(x),) if i != 0 else "") + ('"%s"'%(s2h(x[:i]),) if x[:i] else "") + ('["%s"]' if len(x) > 1 else '"%s"')%(s2h(x[i]),) + ('"%s"'%(s2h(x[i+1:]),) if x[i+1:] else "")
 
 CHI = reduce(iadd, (list(range(*t)) for t in [
