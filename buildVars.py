@@ -3,6 +3,7 @@
 # Build customizations
 # Change this file instead of sconstruct or manifest files, whenever possible.
 
+from datetime import datetime
 
 # Since some strings in `addon_info` are translatable,
 # we need to include them in the .po files.
@@ -25,7 +26,7 @@ addon_info = {
     # Translators: Long description to be shown for this add-on on add-on information from add-ons manager
     "addon_description": _("""The development version of Taiwanese bopomofo braille."""),
     # version
-    "addon_version": "23.02",
+    "addon_version": datetime.today().strftime("%Y.%m.%d"),
     # Author(s)
     "addon_author": "Sponge Jhan <school510587@yahoo.com.tw>",
     # URL for the add-on documentation support
