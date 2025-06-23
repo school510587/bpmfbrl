@@ -34,9 +34,21 @@ CHI = reduce(iadd, (list(range(*t)) for t in [
 
 class LouisBRLTBL:
     def __init__(self, table_path):
+        self.table_path = table_path
         self.tbl, self.word = {}, {}
         with codecs.open(table_path, encoding="UTF-8-SIG") as tblf:
+            self.tbl_txt = [] # The original text of the table.
+            self.han_rules_begin = -1 # The insertion index of Han character rules.
             for l in tblf:
+                l = re.sub(r"[\n\r]+$", "", l) # Clear newline characters.
+                if self.han_rules_begin < len(self.tbl_txt):
+                    self.tbl_txt.append(l)
+                if re.match(r"^\s*\#begin\s*Han\s*character\s*rules\b", l):
+                    if self.han_rules_begin >= 0: raise SyntexError("Duplicate Han character rules section.")
+                    self.han_rules_begin = len(self.tbl_txt)
+                elif re.match(r"^\s*\#end\s*Han\s*character\s*rules\b", l):
+                    if self.han_rules_begin < 0: raise SyntexError("No beginning of Han character rules section.")
+                    self.tbl_txt.append(l)
                 l = l.strip()
                 if not l or l[0] == '#': continue
                 l = re.split("\\s+", l, re.U)
@@ -72,11 +84,12 @@ class LouisBRLTBL:
             # Place heteronym marks at the beginning and the end of a long phase according to self.w2p.
             for i in (0, -1): # The head and the tail.
                 self.p2b[p][1][i] = self.p2b[p][1][i] or self.w2p[p[i]][1]
+        memory_file = io.StringIO()
         for w in sorted(data["variants"].keys(), key=lambda x: (-len(x), x)):
             if len(w) > 1: # Conditional replacement (usually for simplified words).
                 # The "noback correct" rule for w[i] is additional and necessary.
                 for i in (j for j in range(len(w)) if data["variants"][w][j] not in (w[j], data["variants"].get(w[j], w[j]))):
-                    print("noback correct", p2h(w, i), p2h(data["variants"][w][i]))
+                    print("noback correct", p2h(w, i), p2h(data["variants"][w][i]), file=memory_file)
                 continue
             if w in self.w2p: # Invariant cases for "noback correct".
                 # By default, each occurrence of variants should be replaced with their corresponding canonical
@@ -84,13 +97,31 @@ class LouisBRLTBL:
                 # "noback context" rules.
                 for x in sorted(self.w2p[w][0]): # For each phrase x containing w.
                     for y in re.finditer(w, x):
-                        print("noback correct", p2h(x, y.start()), p2h(w))
-            print("noback correct", p2h(w), p2h(data["variants"][w])) # The default replacement rule.
+                        print("noback correct", p2h(x, y.start()), p2h(w), file=memory_file)
+            print("noback correct", p2h(w), p2h(data["variants"][w]), file=memory_file) # The default replacement rule.
         for p in sorted(self.p2b.keys(), key=lambda x: (-len(x), x)):
-            if sum(self.p2b[p][1]): print("\n#", s2h(p), "-".join(self.p2b[p][0]))
+            if sum(self.p2b[p][1]):
+                print("\n#", s2h(p), "-".join(self.p2b[p][0]), file=memory_file)
             for i in range(len(p)):
                 if self.p2b[p][1][i]: # The occurrence of heteronym.
-                    print("noback context", p2h(p, i), "@" + self.p2b[p][0][i])
+                    print("noback context", p2h(p, i), "@" + self.p2b[p][0][i], file=memory_file)
+        with io.open(self.table_path, "w", encoding="UTF-8", newline=os.linesep) as tblf:
+            state = 0 # It determines the next detected syntax.
+            for line in self.tbl_txt[:self.han_rules_begin]:
+                if state == 0: # Detect the copyright declaration.
+                    m = re.match(r"\s*\#\s*Copyright\s*\(C\)\s*\d{4}-(\d{4})\s*nvda-tw\b", line)
+                    if m:
+                        line = "{0}{1}{2}".format(line[:m.start(1)], datetime.today().year, line[m.end(1):])
+                        state = 1
+                elif state == 1: # Detect the version declaration.
+                    m = re.match(r"\s*\#\s*Version\s*:\s*(\d+(?:-\d+)*)\b", line)
+                    if m:
+                        line = line[:m.start(1)] + datetime.today().strftime("%Y-%m") + line[m.end(1):]
+                        state = 2
+                print(line, file=tblf)
+            tblf.write(memory_file.getvalue()) # newline conversion also works here.
+            for line in self.tbl_txt[self.han_rules_begin:]:
+                print(line, file=tblf)
     def make_tests(self, data, yaml_path):
         with io.open(yaml_path, "w", encoding="UTF-8", newline=os.linesep) as ymlf:
             print(u"# Copyright \u00A9 2022 Bo-Cheng Jhan <school510587@yahoo.com.tw>", file=ymlf)
