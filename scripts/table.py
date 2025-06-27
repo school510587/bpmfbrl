@@ -160,8 +160,9 @@ class LouisBRLTBL:
             for p in sorted(self.p2b.keys()):
                 print_test(p, self.p2b[p][0], ymlf)
 
-data = load_dictionary(DEFAULT_JSON_PATH)
-add_missing_variants(data["variants"])
-brltbl = LouisBRLTBL(DEFAULT_ZH_TW_TABLE_PATH)
-brltbl.make_rules(data)
-brltbl.make_tests(data, os.path.join(DEFAULT_YAML_TEST_PATH))
+if __name__ == "__main__":
+    data = load_dictionary(DEFAULT_JSON_PATH)
+    add_missing_variants(data["variants"])
+    brltbl = LouisBRLTBL(DEFAULT_ZH_TW_TABLE_PATH)
+    brltbl.make_rules(data)
+    brltbl.make_tests(data, os.path.join(DEFAULT_YAML_TEST_PATH))
